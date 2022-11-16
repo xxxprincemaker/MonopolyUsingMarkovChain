@@ -6,6 +6,8 @@ import scipy as sci
 import csv
 from fractions import Fraction
 
+import scipy.sparse
+
 
 def roll_probs():
     probability = [0, 1, 2, 3, 4, 5, 6, 5, 4, 3, 2, 1]
@@ -54,16 +56,29 @@ def corretude(m, name):
                 print(f'Probabilidade da soma de {s:.6f} na linha {i} na matrix {name}')
 
 
+def create_matrix2(array):
+    array_matrix = np.tile(array, (40,1))
+    diag = np.diag(array_matrix)
+    offset = [1,2,3,4,5,6,7,8,9,10,11,12]
+    spdiags = scipy.sparse.diags(np.squeeze(np.asarray(diag)), offset, 40, 80).toarray()
+    array_matrix = np.full(spdiags)
+    array_matrix = array_matrix[0:40, 0:40] + array_matrix[0:40, 40:80]
+
+    return array_matrix
+    # ordinary_roll_mat = repmat(ordinary_roll, [40, 1]);
+    # ordinary_roll_mat = full(spdiags(ordinary_roll_mat, 1:12, 40, 80));
+    # ordinary_roll_mat = ordinary_roll_mat(1:40, 1: 40) + ordinary_roll_mat(1: 40, 41: 80);
+
+
 transition_matrix = np.zeros([123, 123])
 
 ordinary_roll = roll_probs()
-ordinary_roll_matrix = createMatrix(ordinary_roll)
+ordinary_roll_matrix = create_matrix2(ordinary_roll)
 
 double_roll = roll_probs_double()
 double_roll_matrix = createMatrix(double_roll)
 
 # Double Rule
-
 transition_matrix[0:40, 0:40] = ordinary_roll_matrix
 transition_matrix[0:40, 40:80] = double_roll_matrix
 
@@ -71,13 +86,14 @@ transition_matrix[40:80, 0:40] = ordinary_roll_matrix
 transition_matrix[40:80, 80:120] = double_roll_matrix
 
 transition_matrix[80:120, 0:40] = ordinary_roll_matrix
+
 transition_matrix[80:120, 121] = 1 - np.sum(transition_matrix[80:120, 0:120], 1)
 
 # Stay in the jail.
-
 transition_matrix[120, 0:40] = double_roll_matrix[20, :]  # 1st turn
-transition_matrix[120, 121] = 1 - np.sum(transition_matrix[121, 0:120])  # 2nd turn
+transition_matrix[120, 121] = 1 - np.sum(transition_matrix[121, 0:120])
 
+# 2nd turn
 transition_matrix[121, 0:40] = double_roll_matrix[20, :]
 transition_matrix[121, 122] = 1 - np.sum(transition_matrix[121, 0:120])
 
@@ -93,18 +109,3 @@ ss_vec = (ss_vec / sum(ss_vec)).real
 
 for counter, element in enumerate(ss_vec):
     print(f'P(x={counter}): {element:.5f}')
-
-# ToDO
-# transition_matrix[40, :80] = double_roll_matrix
-
-# transition_matrix(1:40, 1:40) = ordinary_roll_mat;
-# transition_matrix(1:40, 41:80) = double_roll_mat;
-
-# transition_matrix(41:80, 1:40) = ordinary_roll_mat;
-# transition_matrix(41:80, 81:120) = double_roll_mat;
-
-# transition_matrix(81:120, 1:40) = ordinary_roll_mat;
-# transition_matrix(81:120, 121) = 1 - sum(transition_matrix(81:120, 1:120), 2);
-
-# transformaEmFracaoEPrintar(ordinary_roll_matrix)
-# transformaEmFracaoEPrintar(transition_matrix)
