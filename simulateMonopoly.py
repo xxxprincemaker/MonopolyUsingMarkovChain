@@ -97,6 +97,7 @@ corretude(transition_matrix, 'teste')
 #
 # ss_vec = (ss_vec[0:41]).real
 # # ss_vec = (ss_vec / sum(ss_vec)).real
+# ss_vec = np.asarray(ss_vec)
 #
 # for counter, element in enumerate(ss_vec):
 #     print(f'P(x={counter}): {element}')
@@ -104,6 +105,9 @@ corretude(transition_matrix, 'teste')
 ein_value, ein_vec = la.eig(transition_matrix.conjugate().T)
 ss_vec = ein_vec[:, 0]
 ss_vec = (ss_vec / sum(ss_vec)).real
+ss_vec[0:40] = ss_vec[0:40]
+ss_vec[40] = np.sum(ss_vec[120:123])
+ss_vec = ss_vec[0:41]
 
 for counter, element in enumerate(ss_vec):
     print(f'P(x={counter}): {element:.5f}')
