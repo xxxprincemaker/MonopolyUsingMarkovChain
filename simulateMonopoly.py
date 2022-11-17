@@ -90,8 +90,8 @@ transformaEmFracaoEPrintar(transition_matrix)
 corretude(transition_matrix, 'teste')
 
 # Distribuição Estacionaria
-# ein_value, ein_vec = la.eig(transition_matrix.T, right=False, left=True)
-# ss_vec = np.power(ein_vec[:, (np.abs(ein_value - 1)) < 1e-6], 2)
+# ein_value, ein_vec = la.eig(transition_matrix.conjugate().T, right=False, left=True)
+# ss_vec = np.power(ein_vec[:, 0 ], 2)
 # ss_vec[0:40] = ss_vec[0:40] + ss_vec[40:80] + ss_vec[80:120]
 # ss_vec[40] = np.sum(ss_vec[120:122])
 #
@@ -100,7 +100,7 @@ corretude(transition_matrix, 'teste')
 # ss_vec = np.asarray(ss_vec)
 #
 # for counter, element in enumerate(ss_vec):
-#     print(f'P(x={counter}): {element}')
+#     print(f'P(x={counter}): {element:.22}')
 
 ein_value, ein_vec = la.eig(transition_matrix.conjugate().T)
 ss_vec = ein_vec[:, 0]
