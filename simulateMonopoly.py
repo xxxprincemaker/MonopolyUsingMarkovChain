@@ -31,7 +31,7 @@ def transformaEmFracaoEPrintar(matriz, x1Limitador=0, x2Limitador=123):
     print(x)
 
 
-def createMatrix(probs):
+def create_matrix(probs):
     m = np.zeros([40, 40])
     mm = np.zeros([40, 40])
 
@@ -56,27 +56,13 @@ def corretude(m, name):
                 print(f'Probabilidade da soma de {s:.6f} na linha {i} na matrix {name}')
 
 
-def create_matrix2(array):
-    array_matrix = np.tile(array, (40,1))
-    diag = np.diag(array_matrix)
-    offset = [1,2,3,4,5,6,7,8,9,10,11,12]
-    spdiags = scipy.sparse.diags(np.squeeze(np.asarray(diag)), offset, 40, 80).toarray()
-    array_matrix = np.full(spdiags)
-    array_matrix = array_matrix[0:40, 0:40] + array_matrix[0:40, 40:80]
-
-    return array_matrix
-    # ordinary_roll_mat = repmat(ordinary_roll, [40, 1]);
-    # ordinary_roll_mat = full(spdiags(ordinary_roll_mat, 1:12, 40, 80));
-    # ordinary_roll_mat = ordinary_roll_mat(1:40, 1: 40) + ordinary_roll_mat(1: 40, 41: 80);
-
-
 transition_matrix = np.zeros([123, 123])
 
 ordinary_roll = roll_probs()
-ordinary_roll_matrix = create_matrix2(ordinary_roll)
+ordinary_roll_matrix = create_matrix(ordinary_roll)
 
 double_roll = roll_probs_double()
-double_roll_matrix = createMatrix(double_roll)
+double_roll_matrix = create_matrix(double_roll)
 
 # Double Rule
 transition_matrix[0:40, 0:40] = ordinary_roll_matrix
@@ -90,8 +76,9 @@ transition_matrix[80:120, 0:40] = ordinary_roll_matrix
 transition_matrix[80:120, 121] = 1 - np.sum(transition_matrix[80:120, 0:120], 1)
 
 # Stay in the jail.
-transition_matrix[120, 0:40] = double_roll_matrix[20, :]  # 1st turn
-transition_matrix[120, 121] = 1 - np.sum(transition_matrix[121, 0:120])
+# 1st turn
+transition_matrix[120, 0:40] = double_roll_matrix[20, :]
+transition_matrix[120, 121] = 1 - np.sum(transition_matrix[120, 0:120])
 
 # 2nd turn
 transition_matrix[121, 0:40] = double_roll_matrix[20, :]
@@ -103,7 +90,18 @@ transformaEmFracaoEPrintar(transition_matrix)
 corretude(transition_matrix, 'teste')
 
 # Distribuição Estacionaria
-ein_value, ein_vec = la.eig(transition_matrix.conjugate().T, right=False, left=True)
+# ein_value, ein_vec = la.eig(transition_matrix.T, right=False, left=True)
+# ss_vec = np.power(ein_vec[:, (np.abs(ein_value - 1)) < 1e-6], 2)
+# ss_vec[0:40] = ss_vec[0:40] + ss_vec[40:80] + ss_vec[80:120]
+# ss_vec[40] = np.sum(ss_vec[120:122])
+#
+# ss_vec = (ss_vec[0:41]).real
+# # ss_vec = (ss_vec / sum(ss_vec)).real
+#
+# for counter, element in enumerate(ss_vec):
+#     print(f'P(x={counter}): {element}')
+
+ein_value, ein_vec = la.eig(transition_matrix.conjugate().T)
 ss_vec = ein_vec[:, 0]
 ss_vec = (ss_vec / sum(ss_vec)).real
 

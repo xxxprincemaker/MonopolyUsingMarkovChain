@@ -82,11 +82,13 @@ transition_matrix[121, 122] = 1 - np.sum(transition_matrix[121, 0:120])
 
 transition_matrix[122, 0:40] = double_roll_matrix[20, :] + ordinary_roll_matrix[20, :]
 
+# transition_matrix[120, 0] = -1/6
+
 transformaEmFracaoEPrintar(transition_matrix)
 corretude(transition_matrix, 'teste')
 
 # Distribuição Estacionaria
-ein_value, ein_vec = la.eig(transition_matrix.conjugate().T, right=False, left=True)
+ein_value, ein_vec = la.eig(transition_matrix.conjugate().T)
 ss_vec = ein_vec[:, 0]
 ss_vec = (ss_vec / sum(ss_vec)).real
 
