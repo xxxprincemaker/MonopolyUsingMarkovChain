@@ -1,3 +1,4 @@
+#@title Letra A - Caso 3)
 import numpy as np
 import scipy.linalg as la
 import math
@@ -9,29 +10,29 @@ from fractions import Fraction
 import scipy.sparse
 
 
-def roll_probs():
+def probabilidade_normal_sem_dupla():
     probability = [0, 1, 2, 3, 4, 5, 6, 5, 4, 3, 2, 1]
     probability[1:12:2] = np.subtract(probability[1:12:2], 1)
     probability = [x / 36 for x in probability]
     return probability
 
 
-def roll_probs_double():
+def probabilidade_de_rolar_apenas_duplas():
     probability = np.zeros(12)
     probability[1:12:2] = 1
     probability = [x / 36 for x in probability]
     return probability
 
 
-def transformaEmFracaoEPrintar(matriz, x1Limitador=0, x2Limitador=123):
+def transforma_em_matrix_e_printa(matriz, x1Limitador=0, x2Limitador=123):
     x = '\n'.join(
         [f'\t'.join([f' {str(Fraction(item).limit_denominator()):<10}' for item in linha]) for contador, linha in
          enumerate(matriz) if (contador >= x1Limitador)
-         or (contador <= x2Limitador)])
+         and (contador <= x2Limitador)])
     print(x)
 
 
-def create_matrix(probs):
+def criar_matrix(probs):
     m = np.zeros([40, 40])
     mm = np.zeros([40, 40])
 
@@ -43,71 +44,62 @@ def create_matrix(probs):
     return m
 
 
-def corretude(m, name):
-    if name == 'steady':
+def corretude(m, nome):
+    if nome == 'final':
         for i in range(42):
             s = np.sum(m[:, i])
             if s != 1:
-                print(f'Probabilidade da soma de {s:.6f} na coluna {i} na matrix {name}')
+                print(f'Probabilidade da soma de {s:.6f} na coluna {i} na matrix {nome}')
     else:
         for i in range(123):
             s = np.sum(m[i, :])
             if s != 1.0:
-                print(f'Probabilidade da soma de {s:.6f} na linha {i} na matrix {name}')
+                print(f'Probabilidade da soma de {s:.6f} na linha {i} na matrix {nome}')
 
 
-transition_matrix = np.zeros([123, 123])
+matrix_de_transicao = np.zeros([123, 123])
 
-ordinary_roll = roll_probs()
-ordinary_roll_matrix = create_matrix(ordinary_roll)
+rolagem_normal = probabilidade_normal_sem_dupla()
+rolagem_normal_matrix = criar_matrix(rolagem_normal)
 
-double_roll = roll_probs_double()
-double_roll_matrix = create_matrix(double_roll)
+rolagem_dupla = probabilidade_de_rolar_apenas_duplas()
+rolagem_dupla_matrix = criar_matrix(rolagem_dupla)
 
-# Double Rule
-transition_matrix[0:40, 0:40] = ordinary_roll_matrix
-transition_matrix[0:40, 40:80] = double_roll_matrix
+# Regra das Duplas
+matrix_de_transicao[0:40, 0:40] = rolagem_normal_matrix
+matrix_de_transicao[0:40, 40:80] = rolagem_dupla_matrix
 
-transition_matrix[40:80, 0:40] = ordinary_roll_matrix
-transition_matrix[40:80, 80:120] = double_roll_matrix
+matrix_de_transicao[40:80, 0:40] = rolagem_normal_matrix
+matrix_de_transicao[40:80, 80:120] = rolagem_dupla_matrix
 
-transition_matrix[80:120, 0:40] = ordinary_roll_matrix
+matrix_de_transicao[80:120, 0:40] = rolagem_normal_matrix
 
-transition_matrix[80:120, 121] = 1 - np.sum(transition_matrix[80:120, 0:120], 1)
+matrix_de_transicao[80:120, 121] = 1 - np.sum(matrix_de_transicao[80:120, 0:120], 1)
 
-# Stay in the jail.
-# 1st turn
-transition_matrix[120, 0:40] = double_roll_matrix[20, :]
-transition_matrix[120, 121] = 1 - np.sum(transition_matrix[120, 0:120])
+# Ficar na cadeia
 
-# 2nd turn
-transition_matrix[121, 0:40] = double_roll_matrix[20, :]
-transition_matrix[121, 122] = 1 - np.sum(transition_matrix[121, 0:120])
+# Primeiro Turno
+matrix_de_transicao[120, 0:40] = rolagem_dupla_matrix[20, :]
+matrix_de_transicao[120, 121] = 1 - np.sum(matrix_de_transicao[120, 0:120])
 
-transition_matrix[122, 0:40] = double_roll_matrix[20, :] + ordinary_roll_matrix[20, :]
+# Segundo Turno
+matrix_de_transicao[121, 0:40] = rolagem_dupla_matrix[20, :]
+matrix_de_transicao[121, 122] = 1 - np.sum(matrix_de_transicao[121, 0:120])
 
-transformaEmFracaoEPrintar(transition_matrix)
-corretude(transition_matrix, 'teste')
+#Terceiro Turno
+matrix_de_transicao[122, 0:40] = rolagem_dupla_matrix[20, :] + rolagem_normal_matrix[20, :]
+
+transforma_em_matrix_e_printa(matrix_de_transicao, 0, 124)
+corretude(matrix_de_transicao, 'teste')
 
 # Distribuição Estacionaria
-# ein_value, ein_vec = la.eig(transition_matrix.conjugate().T, right=False, left=True)
-# ss_vec = np.power(ein_vec[:, 0 ], 2)
-# ss_vec[0:40] = ss_vec[0:40] + ss_vec[40:80] + ss_vec[80:120]
-# ss_vec[40] = np.sum(ss_vec[120:122])
-#
-# ss_vec = (ss_vec[0:41]).real
-# # ss_vec = (ss_vec / sum(ss_vec)).real
-# ss_vec = np.asarray(ss_vec)
-#
-# for counter, element in enumerate(ss_vec):
-#     print(f'P(x={counter}): {element:.22}')
+ein_value, ein_vec = la.eig(matrix_de_transicao.conjugate().T)
+distribuicao_estacionaria_vector = np.power(ein_vec[:, 0], 2)
+distribuicao_estacionaria_vector[0:40] = distribuicao_estacionaria_vector[0:40] + distribuicao_estacionaria_vector[40:80] + distribuicao_estacionaria_vector[80:120]
+distribuicao_estacionaria_vector[0:40] = distribuicao_estacionaria_vector[0:40]
+distribuicao_estacionaria_vector[40] = np.sum(distribuicao_estacionaria_vector[120:123])
+distribuicao_estacionaria_vector = distribuicao_estacionaria_vector[0:41].real
+distribuicao_estacionaria_vector[20] += distribuicao_estacionaria_vector[40]
 
-ein_value, ein_vec = la.eig(transition_matrix.conjugate().T)
-ss_vec = ein_vec[:, 0]
-ss_vec = (ss_vec / sum(ss_vec)).real
-ss_vec[0:40] = ss_vec[0:40]
-ss_vec[40] = np.sum(ss_vec[120:123])
-ss_vec = ss_vec[0:41]
-
-for counter, element in enumerate(ss_vec):
-    print(f'P(x={counter}): {element:.5f}')
+for counter, element in enumerate(distribuicao_estacionaria_vector):
+    print(f'P(x={counter}): {element:.4f}')
